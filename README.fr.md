@@ -40,6 +40,7 @@ CodeActor fonctionne avec **tous les principaux éditeurs et IDEs IA**:
 |---------|--------|---------------------|
 | **Claude Code** | ✅ Natif | Support de skill intégré |
 | **Cursor** | ✅ Compatible | Utilise le système de skills de Claude Code |
+| **OpenHands（ex Moltbot）** | ✅ Compatible | Commande personnalisé |
 | **GitHub Copilot** | ✅ Compatible | Installer comme extension |
 | **Continue.dev** | ✅ Compatible | Intégration CLI |
 | **Windsurf** | ✅ Compatible | Commande personnalisé |
@@ -64,6 +65,27 @@ cp -r . ~/.claude/skills/code-actor
 ```
 
 ### Installasion pour d'Autres Éditeurs IA
+
+#### OpenHands 🦾（ex Moltbot）
+
+**Méthode 1 : Ajouter comme Serveur Personnalisé**
+
+1. Ouvrir les paramètres d'OpenHands
+2. Aller dans **Custom Servers** ou **Model Settings**
+3. Ajouter nouveau serveur:
+   - Nom : `CodeActor`
+   - URL : `https://npx.code-actor.dev`
+   - Ou utiliser localement : `node /path/to/CodeActor/dist/cli/index.js serve .`
+
+**Méthode 2 : Intégration npx directe**
+
+```bash
+# OpenHands peut exécuter des commandes npx directement
+npx code-actor analyze ./path --format=json
+npx code-actor serve ./path
+```
+
+#### Éditeur Cursor
 
 #### Éditeur Cursor
 ```bash
