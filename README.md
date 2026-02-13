@@ -1,5 +1,7 @@
 # CodeActor 🎭
 
+**[English](README.md) | [简体中文](README.zh-CN.md)**
+
 > Transform codebases into 3D cartoon characters
 
 ![CodeActor Demo](example1.png)
