@@ -1,6 +1,6 @@
 # CodeActor 🎭
 
-**[English](README.md) | [简体中文](README.zh-CN.md)**
+**[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Français](README.fr.md)**
 
 > 把代码库变成可爱的 3D 卡通角色剧场
 
