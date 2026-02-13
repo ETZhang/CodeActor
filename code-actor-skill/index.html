@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeActor - 代码库拟人化可视化</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+        'Microsoft YaHei', sans-serif;
+      overflow: hidden;
+      background: #1a1a2e;
+      color: #eee;
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部工具栏 */
+    #toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(26, 26, 46, 0.95);
+      border-bottom: 1px solid #333;
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .project-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #project-path {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 14px;
+      width: 300px;
+      outline: none;
+    }
+
+    #project-path:focus {
+      border-color: #4ECDC4;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #444;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #connection-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .status-connected {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ECC71;
+    }
+
+    .status-disconnected {
+      background: rgba(231, 76, 60, 0.2);
+      color: #E74C3C;
+    }
+
+    /* 主画布区域 */
+    #canvas-container {
+      flex: 1;
+      position: relative;
+    }
+
+    /* 加载遮罩 */
+    #loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(26, 26, 46, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #FF6B6B;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 摘要面板 */
+    #summary-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(26, 26, 46, 0.95);
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 16px 20px;
+      backdrop-filter: blur(10px);
+      min-width: 250px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    #summary-panel h3 {
+      font-size: 14px;
+      opacity: 0.6;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    .summary-value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .health-good { color: #2ECC71; }
+    .health-warning { color: #F39C12; }
+    .health-danger { color: #E74C3C; }
+
+    /* 错误提示 */
+    .code-actor-error {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(231, 76, 60, 0.95);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* 模态框 */
+    .code-actor-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      position: relative;
+      background: #1a1a2e;
+      border: 1px solid #444;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content h2 {
+      margin-bottom: 16px;
+      color: #FF6B6B;
+    }
+
+    .modal-content h3 {
+      margin: 16px 0 8px;
+      font-size: 16px;
+      color: #4ECDC4;
+    }
+
+    .modal-content ul {
+      margin-left: 20px;
+    }
+
+    .modal-content li {
+      margin: 4px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部工具栏 -->
+    <div id="toolbar">
+      <div class="toolbar-left">
+        <div class="logo">
+          <div class="logo-icon">🎭</div>
+          <span>CodeActor</span>
+        </div>
+        <div class="project-input">
+          <input type="text" id="project-path" placeholder="项目路径...">
+          <button id="analyze-btn" class="btn">分析代码</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <span id="connection-status" class="status-disconnected">○ 未连接</span>
+        <button id="export-json-btn" class="btn btn-secondary">导出 JSON</button>
+        <button id="export-mermaid-btn" class="btn btn-secondary">导出 Mermaid</button>
+        <button id="help-btn" class="btn btn-secondary">帮助</button>
+      </div>
+    </div>
+
+    <!-- 主画布 -->
+    <div id="canvas-container"></div>
+
+    <!-- 图例面板 -->
+    <div id="legend-panel" style="position: fixed; bottom: 20px; left: 20px; background: rgba(26, 26, 46, 0.95); border: 1px solid #444; border-radius: 12px; padding: 16px; backdrop-filter: blur(10px); z-index: 100; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); max-width: 320px;">
+      <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #FF6B6B;">📜 关系图例</h3>
+
+      <!-- 关系类型 -->
+      <div style="margin-bottom: 16px;">
+        <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px; color: #ddd;">关系类型</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #FF6B6B;"></div>
+            <span style="font-size: 13px;">死党 (强耦合)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #9B59B6;"></div>
+            <span style="font-size: 13px;">单恋 (单向依赖)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #FF4500;"></div>
+            <span style="font-size: 13px;">禁忌之恋 (循环依赖)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #3498DB;"></div>
+            <span style="font-size: 13px;">匿名树洞 (异步通信)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #2ECC71;"></div>
+            <span style="font-size: 13px;">偶像崇拜 (弱依赖)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #95A5A6;"></div>
+            <span style="font-size: 13px;">契约关系 (接口依赖)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 健康等级 -->
+      <div style="margin-bottom: 16px;">
+        <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px; color: #ddd;">健康等级</div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #2ECC71; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px;">
+              <span style="font-size: 18px; color: #fff;">✓</span>
+            </div>
+            <span style="font-size: 12px;">优秀</span>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #00BCD4; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px;">
+              <span style="font-size: 18px; color: #fff;">✓</span>
+            </div>
+            <span style="font-size: 12px;">良好</span>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #F1C40F; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px;">
+              <span style="font-size: 18px; color: #fff;">!</span>
+            </div>
+            <span style="font-size: 12px;">亚健康</span>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #FF6B00; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px;">
+              <span style="font-size: 18px; color: #fff;">⚠</span>
+            </div>
+            <span style="font-size: 12px;">不健康</span>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #DC2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px;">
+              <span style="font-size: 18px; color: #fff;">✖</span>
+            </div>
+            <span style="font-size: 12px;">危险</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 代码含义说明 -->
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 11px; opacity: 0.8; margin-bottom: 8px;">
+          <strong>💡 单击</strong> 角色查看属性面板
+        </div>
+        <div style="font-size: 11px; opacity: 0.8; margin-bottom: 8px;">
+          <strong>🖱️ 双击</strong> 角色高亮关系网
+        </div>
+        <div style="font-size: 11px; opacity: 0.8; margin-bottom: 4px;">
+          <strong>✋ 拖动</strong> 选中角色调整位置
+        </div>
+      </div>
+
+      <button onclick="document.getElementById('legend-panel').style.display = 'none'" style="margin-top: 12px; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 12px;">隐藏图例</button>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 摘要面板 -->
+    <div id="summary-panel">
+      <h3>📊 项目摘要</h3>
+      <div id="summary-content">
+        <div class="summary-item">
+          <span class="summary-label">状态</span>
+          <span class="summary-value">等待分析...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/web/main.ts"></script>
+</body>
+</html>

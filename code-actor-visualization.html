@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreseenDesktop - Code Architecture 3D Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            overflow: hidden;
+            color: #fff;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        #info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 380px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        #info-panel.hidden {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .character-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .character-info h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .character-type {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .stat-section {
+            margin-bottom: 16px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .health-bar {
+            height: 8px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .health-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .health-fill.excellent { background: linear-gradient(90deg, #10b981, #34d399); }
+        .health-fill.good { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        .health-fill.fair { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .health-fill.poor { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .health-fill.critical { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .dependencies-list {
+            list-style: none;
+        }
+
+        .dependency-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dependency-item:hover {
+            background: rgba(51, 65, 85, 0.7);
+            transform: translateX(4px);
+        }
+
+        .dependency-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dependency-dot.strong { background: #ef4444; }
+        .dependency-dot.one-way { background: #3b82f6; }
+        .dependency-dot.circular { background: #a855f7; }
+
+        #controls-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 16px 24px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+        }
+
+        .control-btn:hover {
+            background: rgba(71, 85, 105, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        #legend {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        #legend h3 {
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+
+        #header {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+        }
+
+        #header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        #header p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .code-lines {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .relationship-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .relationship-type.strong { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .relationship-type.one-way { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .relationship-type.circular { background: rgba(168, 85, 247, 0.2); color: #c4b5fd; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="header">
+        <h1>PreseenDesktop Architecture</h1>
+        <p>Double-click characters to explore relationships • Drag to rotate • Scroll to zoom</p>
+    </div>
+
+    <div id="legend">
+        <h3>Character Types</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #ef4444, #f97316);"></div>
+            <span>Hot-Blooded Protagonist</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);"></div>
+            <span>Reliable Pillar</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #10b981, #34d399);"></div>
+            <span>Silent Helper</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #8b5cf6, #a855f7);"></div>
+            <span>Quirky Character</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"></div>
+            <span>Busy Bee</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #64748b, #475569);"></div>
+            <span>Lonely Wanderer</span>
+        </div>
+    </div>
+
+    <div id="info-panel" class="hidden">
+        <div class="panel-header">
+            <div class="character-icon" id="char-icon"></div>
+            <div class="character-info">
+                <h2 id="char-name">Module Name</h2>
+                <div class="character-type" id="char-type">Character Type</div>
+            </div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label">Health Score</div>
+            <div class="stat-value"><span id="health-score">0</span>/100</div>
+            <div class="health-bar">
+                <div class="health-fill" id="health-fill"></div>
+            </div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label">Code Lines</div>
+            <div class="stat-value code-lines" id="code-lines">0</div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label">Description</div>
+            <div class="stat-value" id="description">-</div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label">Dependencies</div>
+            <ul class="dependencies-list" id="dependencies-list"></ul>
+        </div>
+    </div>
+
+    <div id="controls-panel">
+        <button class="control-btn active" id="view-all">All Modules</button>
+        <button class="control-btn" id="view-agents">AI Agents</button>
+        <button class="control-btn" id="view-bridges">IPC Bridges</button>
+        <button class="control-btn" id="view-ui">UI Components</button>
+        <button class="control-btn" id="reset-camera">Reset View</button>
+    </div>
+
+    <script>
+        // Character data based on PreseenDesktop codebase analysis
+        const characters = [
+            {
+                id: 'main-process',
+                name: 'Main Process',
+                type: 'Hot-Blooded Protagonist',
+                emoji: '',
+                color: 0xef4444,
+                gradient: ['#ef4444', '#f97316'],
+                health: 92,
+                lines: 349,
+                description: 'Entry point for the Electron application. Handles app lifecycle, window creation, and coordinates all subsystems.',
+                position: { x: 0, y: 5, z: 0 },
+                size: 1.5,
+                category: 'core'
+            },
+            {
+                id: 'renderer',
+                name: 'Renderer Process',
+                type: 'Hot-Blooded Protagonist',
+                emoji: '⚛️',
+                color: 0xf97316,
+                gradient: ['#f97316', '#fbbf24'],
+                health: 88,
+                lines: 8500,
+                description: 'React 19.x UI application with Arco Design components. Main user interface with conversation pages, settings, and workspace management.',
+                position: { x: -4, y: 0, z: 2 },
+                size: 1.4,
+                category: 'ui'
+            },
+            {
+                id: 'ipc-bridge',
+                name: 'IPC Bridge',
+                type: 'Reliable Pillar',
+                emoji: '',
+                color: 0x3b82f6,
+                gradient: ['#3b82f6', '#06b6d4'],
+                health: 95,
+                lines: 493,
+                description: 'Centralized communication hub between main and renderer processes. Provides unified API for all agents (ACP, Codex, Gemini, OpenClaw).',
+                position: { x: 0, y: 0, z: 0 },
+                size: 1.3,
+                category: 'bridge'
+            },
+            {
+                id: 'process-services',
+                name: 'Process Services',
+                type: 'Reliable Pillar',
+                emoji: '⚙️',
+                color: 0x06b6d4,
+                gradient: ['#06b6d4', '#22d3ee'],
+                health: 85,
+                lines: 3200,
+                description: 'Backend services handling core business logic. Database operations with Better SQLite3, IPC handlers, MCP services, and worker management.',
+                position: { x: 4, y: 0, z: 2 },
+                size: 1.3,
+                category: 'core'
+            },
+            {
+                id: 'acp-agent',
+                name: 'ACP Agent',
+                type: 'Quirky Character',
+                emoji: '🤖',
+                color: 0x8b5cf6,
+                gradient: ['#8b5cf6', '#a855f7'],
+                health: 82,
+                lines: 1200,
+                description: 'ACP Protocol adapter for CLI AI tools (Claude Code, Qwen Code). Handles detection, connection, and communication with ACP-compatible agents.',
+                position: { x: -6, y: -3, z: -2 },
+                size: 1.2,
+                category: 'agent'
+            },
+            {
+                id: 'gemini-agent',
+                name: 'Gemini Agent',
+                type: 'Quirky Character',
+                emoji: '✨',
+                color: 0xa855f7,
+                gradient: ['#a855f7', '#c084fc'],
+                health: 80,
+                lines: 2800,
+                description: 'Google Gemini CLI integration with OAuth, IDE context, web search, and image generation tools. Supports conversation-tool and useReactToolScheduler.',
+                position: { x: -2, y: -3, z: -3 },
+                size: 1.2,
+                category: 'agent'
+            },
+            {
+                id: 'codex-agent',
+                name: 'Codex Agent',
+                type: 'Quirky Character',
+                emoji: '🔮',
+                color: 0xec4899,
+                gradient: ['#ec4899', '#f472b6'],
+                health: 84,
+                lines: 1800,
+                description: 'OpenAI Codex integration with approval store, event handlers, file operations, session management, and tool processing for chat completions.',
+                position: { x: 2, y: -3, z: -3 },
+                size: 1.2,
+                category: 'agent'
+            },
+            {
+                id: 'openclaw-agent',
+                name: 'OpenClaw Gateway',
+                type: 'Quirky Character',
+                emoji: '🌐',
+                color: 0xf43f5e,
+                gradient: ['#f43f5e', '#fb7185'],
+                health: 78,
+                lines: 600,
+                description: 'Gateway connection system for remote agent communication. Handles device authentication, identity management, and gateway protocol.',
+                position: { x: 6, y: -3, z: -2 },
+                size: 1.1,
+                category: 'agent'
+            },
+            {
+                id: 'webserver',
+                name: 'Web Server',
+                type: 'Silent Helper',
+                emoji: '🌐',
+                color: 0x10b981,
+                gradient: ['#10b981', '#34d399'],
+                health: 86,
+                lines: 1500,
+                description: 'Express + WebSocket server for remote WebUI access. Includes JWT authentication, QR code login, and real-time communication channels.',
+                position: { x: 6, y: 3, z: -2 },
+                size: 1.2,
+                category: 'core'
+            },
+            {
+                id: 'channels',
+                name: 'Channels System',
+                type: 'Silent Helper',
+                emoji: '💬',
+                color: 0x22c55e,
+                gradient: ['#22c55e', '#4ade80'],
+                health: 81,
+                lines: 2200,
+                description: 'Messaging platform integrations (Telegram, Lark/Feishu). Plugin architecture with event bus, message service, pairing service, and action executor.',
+                position: { x: -6, y: 3, z: -2 },
+                size: 1.2,
+                category: 'core'
+            },
+            {
+                id: 'common-utils',
+                name: 'Common Utilities',
+                type: 'Silent Helper',
+                emoji: '🛠️',
+                color: 0x14b8a6,
+                gradient: ['#14b8a6', '#2dd4bf'],
+                health: 90,
+                lines: 3500,
+                description: 'Shared utilities including API key management, rotating API clients, approval stores, command parsers, chat libraries, and type definitions.',
+                position: { x: 0, y: -5, z: 0 },
+                size: 1.1,
+                category: 'utils'
+            },
+            {
+                id: 'database',
+                name: 'Database Layer',
+                type: 'Reliable Pillar',
+                emoji: '🗄️',
+                color: 0x0ea5e9,
+                gradient: ['#0ea5e9', '#38bdf8'],
+                health: 88,
+                lines: 800,
+                description: 'Better SQLite3 integration for persistent storage. Manages conversations, messages, cron jobs, MCP configurations, and user data.',
+                position: { x: 4, y: -5, z: 3 },
+                size: 1.1,
+                category: 'storage'
+            },
+            {
+                id: 'cron-service',
+                name: 'Cron Service',
+                type: 'Busy Bee',
+                emoji: '⏰',
+                color: 0xfbbf24,
+                gradient: ['#fbbf24', '#f59e0b'],
+                health: 87,
+                lines: 500,
+                description: 'Task scheduling engine using croner library. Handles job creation, execution tracking, retry logic, and busy guard for concurrent prevention.',
+                position: { x: -4, y: -5, z: 3 },
+                size: 1.0,
+                category: 'service'
+            },
+            {
+                id: 'mcp-service',
+                name: 'MCP Service',
+                type: 'Busy Bee',
+                emoji: '🔌',
+                color: 0xeab308,
+                gradient: ['#eab308', '#facc15'],
+                health: 83,
+                lines: 1200,
+                description: 'Model Context Protocol implementation. Manages MCP server connections, tool discovery, OAuth authentication, and server-to-agent synchronization.',
+                position: { x: 0, y: -7, z: -2 },
+                size: 1.1,
+                category: 'service'
+            },
+            {
+                id: 'adapter',
+                name: 'Adapter Layer',
+                type: 'Lonely Wanderer',
+                emoji: '🔄',
+                color: 0x64748b,
+                gradient: ['#64748b', '#475569'],
+                health: 79,
+                lines: 300,
+                description: 'Platform adapters for browser and main process. Handles protocol conversion and platform-specific functionality abstraction.',
+                position: { x: 7, y: 0, z: -4 },
+                size: 0.9,
+                category: 'adapter'
+            },
+            {
+                id: 'worker',
+                name: 'Worker Processes',
+                type: 'Lonely Wanderer',
+                emoji: '👷',
+                color: 0x475569,
+                gradient: ['#475569', '#334155'],
+                health: 76,
+                lines: 400,
+                description: 'Background task workers for AI agent operations. Manages worker lifecycle, communication channels, and task distribution.',
+                position: { x: -7, y: 0, z: -4 },
+                size: 0.9,
+                category: 'worker'
+            },
+            {
+                id: 'components',
+                name: 'UI Components',
+                type: 'Busy Bee',
+                emoji: '🧩',
+                color: 0xf59e0b,
+                gradient: ['#f59e0b', '#fbbf24'],
+                health: 85,
+                lines: 15000,
+                description: 'Reusable React components including settings modals, message displays, file previews, code editors with Monaco, and Arco Design integrations.',
+                position: { x: -2, y: 5, z: 4 },
+                size: 1.3,
+                category: 'ui'
+            },
+            {
+                id: 'pages',
+                name: 'Page Components',
+                type: 'Busy Bee',
+                emoji: '📄',
+                color: 0xd97706,
+                gradient: ['#d97706', '#f59e0b'],
+                health: 83,
+                lines: 12000,
+                description: 'Page-level components for conversation views, settings pages, cron management, authentication, and workspace exploration interfaces.',
+                position: { x: 2, y: 5, z: 4 },
+                size: 1.2,
+                category: 'ui'
+            },
+            {
+                id: 'context',
+                name: 'React Context',
+                type: 'Silent Helper',
+                emoji: '📦',
+                color: 0x059669,
+                gradient: ['#059669', '#10b981'],
+                health: 89,
+                lines: 800,
+                description: 'Global state management with React Context. Handles authentication, conversation state, layout preferences, and theme configuration.',
+                position: { x: -5, y: 2, z: 5 },
+                size: 1.0,
+                category: 'ui'
+            },
+            {
+                id: 'hooks',
+                name: 'Custom Hooks',
+                type: 'Silent Helper',
+                emoji: '🪝',
+                color: 0x0891b2,
+                gradient: ['#0891b2', '#06b6d4'],
+                health: 91,
+                lines: 600,
+                description: 'React hooks for directory selection, multi-agent detection, resizable split views, and other reusable UI logic.',
+                position: { x: 5, y: 2, z: 5 },
+                size: 1.0,
+                category: 'ui'
+            }
+        ];
+
+        // Relationship definitions
+        const relationships = [
+            { from: 'main-process', to: 'ipc-bridge', type: 'one-way', strength: 1 },
+            { from: 'main-process', to: 'process-services', type: 'one-way', strength: 1 },
+            { from: 'main-process', to: 'renderer', type: 'one-way', strength: 1 },
+            { from: 'main-process', to: 'webserver', type: 'one-way', strength: 0.8 },
+            { from: 'main-process', to: 'channels', type: 'one-way', strength: 0.7 },
+            { from: 'renderer', to: 'ipc-bridge', type: 'strong', strength: 1 },
+            { from: 'renderer', to: 'components', type: 'one-way', strength: 1 },
+            { from: 'renderer', to: 'pages', type: 'one-way', strength: 1 },
+            { from: 'renderer', to: 'context', type: 'one-way', strength: 1 },
+            { from: 'renderer', to: 'hooks', type: 'one-way', strength: 1 },
+            { from: 'ipc-bridge', to: 'process-services', type: 'strong', strength: 1 },
+            { from: 'process-services', to: 'acp-agent', type: 'one-way', strength: 1 },
+            { from: 'process-services', to: 'gemini-agent', type: 'one-way', strength: 1 },
+            { from: 'process-services', to: 'codex-agent', type: 'one-way', strength: 1 },
+            { from: 'process-services', to: 'openclaw-agent', type: 'one-way', strength: 1 },
+            { from: 'process-services', to: 'database', type: 'strong', strength: 1 },
+            { from: 'process-services', to: 'cron-service', type: 'one-way', strength: 0.9 },
+            { from: 'process-services', to: 'mcp-service', type: 'one-way', strength: 0.9 },
+            { from: 'acp-agent', to: 'common-utils', type: 'one-way', strength: 0.8 },
+            { from: 'gemini-agent', to: 'common-utils', type: 'one-way', strength: 0.8 },
+            { from: 'codex-agent', to: 'common-utils', type: 'one-way', strength: 0.8 },
+            { from: 'channels', to: 'common-utils', type: 'one-way', strength: 0.7 },
+            { from: 'webserver', to: 'ipc-bridge', type: 'one-way', strength: 0.8 },
+            { from: 'webserver', to: 'database', type: 'one-way', strength: 0.7 },
+            { from: 'components', to: 'context', type: 'one-way', strength: 0.9 },
+            { from: 'pages', to: 'hooks', type: 'one-way', strength: 0.8 },
+            { from: 'pages', to: 'components', type: 'one-way', strength: 1 },
+            { from: 'database', to: 'common-utils', type: 'one-way', strength: 0.6 },
+            { from: 'worker', to: 'common-utils', type: 'one-way', strength: 0.7 },
+            { from: 'main-process', to: 'worker', type: 'one-way', strength: 0.6 },
+            { from: 'adapter', to: 'common-utils', type: 'one-way', strength: 0.5 },
+        ];
+
+        // Three.js setup
+        let scene, camera, renderer, controls;
+        let characterMeshes = {};
+        let relationshipLines = [];
+        let selectedCharacter = null;
+        let raycaster, mouse;
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x0f172a, 30, 80);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 25);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x000000, 0);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x60a5fa, 1, 50);
+            pointLight.position.set(0, 10, 0);
+            scene.add(pointLight);
+
+            // Add stars background
+            createStarfield();
+
+            // Create characters
+            createCharacters();
+
+            // Create relationships
+            createRelationships();
+
+            // Raycaster for interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('click', onMouseClick);
+            renderer.domElement.addEventListener('dblclick', onDoubleClick);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('wheel', onMouseWheel);
+
+            // Mouse drag for camera rotation
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            let cameraAngle = { theta: 0, phi: Math.PI / 4 };
+            let cameraDistance = 25;
+
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                cameraAngle.theta -= deltaX * 0.01;
+                cameraAngle.phi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraAngle.phi + deltaY * 0.01));
+
+                updateCameraPosition();
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+            renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
+
+            function updateCameraPosition() {
+                camera.position.x = cameraDistance * Math.sin(cameraAngle.phi) * Math.sin(cameraAngle.theta);
+                camera.position.y = cameraDistance * Math.cos(cameraAngle.phi);
+                camera.position.z = cameraDistance * Math.sin(cameraAngle.phi) * Math.cos(cameraAngle.theta);
+                camera.lookAt(0, 0, 0);
+            }
+
+            // Control buttons
+            document.getElementById('view-all').addEventListener('click', () => filterByCategory('all'));
+            document.getElementById('view-agents').addEventListener('click', () => filterByCategory('agent'));
+            document.getElementById('view-bridges').addEventListener('click', () => filterByCategory('bridge'));
+            document.getElementById('view-ui').addEventListener('click', () => filterByCategory('ui'));
+            document.getElementById('reset-camera').addEventListener('click', () => {
+                cameraAngle = { theta: 0, phi: Math.PI / 4 };
+                cameraDistance = 25;
+                updateCameraPosition();
+            });
+
+            // Start animation
+            animate();
+        }
+
+        function createStarfield() {
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const starsVertices = [];
+            for (let i = 0; i < 2000; i++) {
+                const x = (Math.random() - 0.5) * 200;
+                const y = (Math.random() - 0.5) * 200;
+                const z = (Math.random() - 0.5) * 200;
+                starsVertices.push(x, y, z);
+            }
+
+            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+        }
+
+        function createCharacters() {
+            characters.forEach(char => {
+                const group = new THREE.Group();
+
+                // Create gradient sphere
+                const geometry = new THREE.SphereGeometry(char.size, 32, 32);
+
+                // Create gradient material using vertex colors
+                const material = new THREE.MeshPhongMaterial({
+                    color: char.color,
+                    emissive: char.color,
+                    emissiveIntensity: 0.2,
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                group.add(mesh);
+
+                // Add outer glow ring
+                const ringGeometry = new THREE.TorusGeometry(char.size * 1.2, 0.05, 16, 100);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: char.color,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                group.add(ring);
+
+                // Add health indicator
+                const healthColor = getHealthColor(char.health);
+                const healthGeometry = new THREE.RingGeometry(char.size * 1.3, char.size * 1.4, 32);
+                const healthMaterial = new THREE.MeshBasicMaterial({
+                    color: healthColor,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const healthRing = new THREE.Mesh(healthGeometry, healthMaterial);
+                healthRing.rotation.x = Math.PI / 2;
+                group.add(healthRing);
+
+                // Position
+                group.position.set(char.position.x, char.position.y, char.position.z);
+
+                // Store reference
+                group.userData = { id: char.id, character: char };
+                characterMeshes[char.id] = group;
+
+                scene.add(group);
+            });
+        }
+
+        function getHealthColor(health) {
+            if (health >= 90) return 0x10b981;
+            if (health >= 75) return 0x06b6d4;
+            if (health >= 60) return 0xfbbf24;
+            if (health >= 40) return 0xf97316;
+            return 0xef4444;
+        }
+
+        function createRelationships() {
+            relationships.forEach(rel => {
+                const fromChar = characters.find(c => c.id === rel.from);
+                const toChar = characters.find(c => c.id === rel.to);
+
+                if (!fromChar || !toChar) return;
+
+                const points = [];
+                points.push(new THREE.Vector3(fromChar.position.x, fromChar.position.y, fromChar.position.z));
+                points.push(new THREE.Vector3(toChar.position.x, toChar.position.y, toChar.position.z));
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+                let color;
+                if (rel.type === 'strong') color = 0xef4444;
+                else if (rel.type === 'one-way') color = 0x3b82f6;
+                else if (rel.type === 'circular') color = 0xa855f7;
+                else color = 0x64748b;
+
+                const material = new THREE.LineBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.4 * rel.strength,
+                    linewidth: 2
+                });
+
+                const line = new THREE.Line(geometry, material);
+                line.userData = { relationship: rel };
+                relationshipLines.push(line);
+                scene.add(line);
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Hover effect
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = Object.values(characterMeshes);
+            const intersects = raycaster.intersectObjects(meshes, true);
+
+            // Reset all scales
+            meshes.forEach(mesh => {
+                if (mesh.scale.x > 1) {
+                    mesh.scale.set(1, 1, 1);
+                }
+            });
+
+            if (intersects.length > 0) {
+                const group = intersects[0].object.parent;
+                group.scale.set(1.1, 1.1, 1.1);
+                renderer.domElement.style.cursor = 'pointer';
+            } else {
+                renderer.domElement.style.cursor = 'grab';
+            }
+        }
+
+        function onMouseClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = Object.values(characterMeshes);
+            const intersects = raycaster.intersectObjects(meshes, true);
+
+            if (intersects.length > 0) {
+                const group = intersects[0].object.parent;
+                selectCharacter(group.userData.character);
+            } else {
+                hideInfoPanel();
+            }
+        }
+
+        function onDoubleClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = Object.values(characterMeshes);
+            const intersects = raycaster.intersectObjects(meshes, true);
+
+            if (intersects.length > 0) {
+                const char = intersects[0].object.parent.userData.character;
+                highlightDependencies(char.id);
+            }
+        }
+
+        function onMouseWheel(event) {
+            event.preventDefault();
+            const zoomSpeed = 0.001;
+            const distance = camera.position.length();
+            const newDistance = distance * (1 + event.deltaY * zoomSpeed);
+
+            // Clamp zoom
+            if (newDistance > 10 && newDistance < 50) {
+                camera.position.multiplyScalar(newDistance / distance);
+            }
+        }
+
+        function selectCharacter(char) {
+            selectedCharacter = char;
+
+            // Update info panel
+            document.getElementById('char-name').textContent = char.name;
+            document.getElementById('char-type').textContent = char.type;
+            document.getElementById('char-icon').textContent = char.emoji;
+            document.getElementById('char-icon').style.background = `linear-gradient(135deg, ${char.gradient[0]}, ${char.gradient[1]})`;
+            document.getElementById('health-score').textContent = char.health;
+            document.getElementById('code-lines').textContent = char.lines.toLocaleString();
+            document.getElementById('description').textContent = char.description;
+
+            // Health bar
+            const healthFill = document.getElementById('health-fill');
+            healthFill.style.width = char.health + '%';
+            healthFill.className = 'health-fill';
+            if (char.health >= 90) healthFill.classList.add('excellent');
+            else if (char.health >= 75) healthFill.classList.add('good');
+            else if (char.health >= 60) healthFill.classList.add('fair');
+            else if (char.health >= 40) healthFill.classList.add('poor');
+            else healthFill.classList.add('critical');
+
+            // Dependencies
+            const depsList = document.getElementById('dependencies-list');
+            depsList.innerHTML = '';
+
+            const deps = relationships.filter(r => r.from === char.id);
+            deps.forEach(dep => {
+                const toChar = characters.find(c => c.id === dep.to);
+                if (!toChar) return;
+
+                const li = document.createElement('li');
+                li.className = 'dependency-item';
+                li.innerHTML = `
+                    <div class="dependency-dot ${dep.type}"></div>
+                    <span>${toChar.name}</span>
+                    <span class="relationship-type ${dep.type}">${dep.type}</span>
+                `;
+                li.addEventListener('click', () => selectCharacter(toChar));
+                depsList.appendChild(li);
+            });
+
+            // Show panel
+            document.getElementById('info-panel').classList.remove('hidden');
+        }
+
+        function hideInfoPanel() {
+            document.getElementById('info-panel').classList.add('hidden');
+            selectedCharacter = null;
+
+            // Reset highlighting
+            Object.values(characterMeshes).forEach(mesh => {
+                mesh.visible = true;
+            });
+            relationshipLines.forEach(line => {
+                line.visible = true;
+            });
+        }
+
+        function highlightDependencies(charId) {
+            // Hide all characters first
+            Object.values(characterMeshes).forEach(mesh => {
+                mesh.visible = false;
+            });
+            relationshipLines.forEach(line => {
+                line.visible = false;
+            });
+
+            // Show selected character and its dependencies
+            const relatedIds = [charId];
+            relationships.filter(r => r.from === charId || r.to === charId).forEach(r => {
+                if (r.from !== charId) relatedIds.push(r.from);
+                if (r.to !== charId) relatedIds.push(r.to);
+            });
+
+            relatedIds.forEach(id => {
+                if (characterMeshes[id]) {
+                    characterMeshes[id].visible = true;
+                }
+            });
+
+            // Show related lines
+            relationshipLines.forEach(line => {
+                const rel = line.userData.relationship;
+                if (rel.from === charId || rel.to === charId) {
+                    line.visible = true;
+                }
+            });
+        }
+
+        function filterByCategory(category) {
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            Object.values(characterMeshes).forEach(mesh => {
+                const char = mesh.userData.character;
+                mesh.visible = category === 'all' || char.category === category;
+            });
+
+            relationshipLines.forEach(line => {
+                const rel = line.userData.relationship;
+                const fromChar = characters.find(c => c.id === rel.from);
+                const toChar = characters.find(c => c.id === rel.to);
+                line.visible = category === 'all' ||
+                    (fromChar && fromChar.category === category) ||
+                    (toChar && toChar.category === category);
+            });
+        }
+
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // Animate characters (gentle floating)
+            Object.values(characterMeshes).forEach((mesh, index) => {
+                const char = mesh.userData.character;
+                mesh.position.y = char.position.y + Math.sin(time + index * 0.5) * 0.2;
+
+                // Gentle rotation for outer ring
+                if (mesh.children[1]) {
+                    mesh.children[1].rotation.z = time * 0.2;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
