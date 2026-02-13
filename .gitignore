@@ -1,10 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Logs
 *.log
+
+# Editor files
 .DS_Store
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Environment
 .env
 .env.local
+
+# Temporary files
+code-actor-*.html
+*.tar.gz
+
+# Chinese development notes (keep only English docs)
+建议.md
+问题.md
+idea.md
+
+# Old skill files (code-actor-skill/ is the new one)
+skills/
