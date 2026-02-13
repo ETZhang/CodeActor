@@ -26,21 +26,21 @@ CodeActor est un outil créatif de visualisation de code qui analyse votre base 
 | 🔥 Protagoniste Sang-Chaud | main/app/index | Cape, yeux brillants |
 | 🛡️ Pilier Fiable | database/model | Corps rond, lunettes, moustache |
 | 💚 Aide Silencieux | util/helper | Aura d'ange, petites ailes |
-| 🎪 Personnage Excentrique | middleware | Corps polyédrique, chapeau point d'interrogation |
+| 🎪 Personnage Excentrique | middleware | Corps polyédrique, chapeau de point d'interrogation |
 | 🌙 Figure Mystérieuse | config/constant | Corps transparent, yeux brillants |
-| ⚡ Abeille Occupée | appels haute fréquence | Cravate, serviette, gouttes de sueur |
-| 🌸 Âme Fragile | modules complexes | Corps mince, pansements, larmes |
-| 🌑 Vagabond Solitaire | sans appels | Semitransparent, aura qui s'estonne |
+| ⚡ Abeille Occupée | appels de haute fréquence | Cravate, serviette, gouttes de sueur |
+| 🌸 Âme Fragile | modules complexes | Corps maigre, pansements, larmes |
+| 🌑 Vagabond Solitaire | sans appels | Semitransparent, aura qui s'évaneisse |
 
 ## 🎯 Skill Universel pour Éditeurs IA
 
-CodeActor fonctionne avec **tous les principaux éditeurs et IDEs IA**:
+CodeActor fonctionne avec **tous les principaux éditeurs et IDEs IA** :
 
 | Éditeur | Statut | Méthode d'Installasion |
 |---------|--------|---------------------|
 | **Claude Code** | ✅ Natif | Support de skill intégré |
 | **Cursor** | ✅ Compatible | Utilise le système de skills de Claude Code |
-| **OpenHands（ex Moltbot）** | ✅ Compatible | Commande personnalisé |
+| **OpenClaw** | ✅ Compatible | Installer comme plugin de skill |
 | **GitHub Copilot** | ✅ Compatible | Installer comme extension |
 | **Continue.dev** | ✅ Compatible | Intégration CLI |
 | **Windsurf** | ✅ Compatible | Commande personnalisé |
@@ -66,31 +66,47 @@ cp -r . ~/.claude/skills/code-actor
 
 ### Installasion pour d'Autres Éditeurs IA
 
-#### OpenHands 🦾（ex Moltbot）
+#### OpenClaw 🤖
 
-**Méthode 1 : Ajouter comme Serveur Personnalisé**
+OpenClaw est une plateforme deassistant personnal IA open-source qui supporte les plugins de compétences.
 
-1. Ouvrir les paramètres d'OpenHands
-2. Aller dans **Custom Servers** ou **Model Settings**
-3. Ajouter nouveau serveur:
-   - Nom : `CodeActor`
-   - URL : `https://npx.code-actor.dev`
-   - Ou utiliser localement : `node /path/to/CodeActor/dist/cli/index.js serve .`
-
-**Méthode 2 : Intégration npx directe**
+**Méthode 1 : Depuis le Référentiel GitHub**
 
 ```bash
-# OpenHands peut exécuter des commandes npx directement
-npx code-actor analyze ./path --format=json
-npx code-actor serve ./path
+# Format de plugin de skill de OpenClaw
+openclaw plugins install @ETZhang/code-actor
 ```
 
-#### Éditeur Cursor
+**Méthode 2 : Depuis ClawHub**
+
+```bash
+# Chercher et installer depuis ClawHub (registre des skills de OpenClaw)
+openclaw skill install code-actor
+```
+
+**Vérification d'Installasion :**
+
+```bash
+# Lister les compétences installées
+openclaw skill list
+
+# Tester la compétence
+openclaw skill run code-actor --help
+```
+
+**Pour Développeurs : Publier sur ClawHub**
+
+Pour que CodeActor soit disponible sur ClawHub :
+1. Publier ce référentiel sur ClawHub
+2. Les utilisateurs peuvent installer avec : `openclaw plugins install code-actor`
+
+---
 
 #### Éditeur Cursor
+
 ```bash
 # Cursor utilise les skills Claude Code
-# Même installasion que Claude Code
+# Même installation que Claude Code
 cd /path/to/CodeActor
 npm run build
 mkdir -p ~/.claude/skills
@@ -99,6 +115,7 @@ cp -r . ~/.claude/skills/code-actor
 ```
 
 #### GitHub Copilot
+
 ```bash
 # Installer via npm (bientôt)
 npm install -g code-actor
@@ -108,6 +125,7 @@ npx code-actor analyze ./path/to/project
 ```
 
 #### Continue.dev / Windsurf / Tabnine
+
 ```bash
 # Utiliser comme outil CLI
 npx code-actor analyze ./path --format=json
@@ -116,6 +134,7 @@ npx code-actor serve ./path
 ```
 
 #### Extension VS Code
+
 ```bash
 # Installer depuis marketplace (bientôt)
 code --install-extension ETZhang.code-actor
@@ -128,6 +147,21 @@ code --install-extension ./dist/vscode
 
 ### Indépendant
 
+```bash
+# Cloner le référentiel
+git clone https://github.com/ETZhang/CodeActor.git
+cd code-actor
+
+# Installer les dépendances
+npm install
+
+# Démarrer le serveur de développement
+npm run dev
+
+# Construire
+npm run build
+```
+
 ### Interface Web
 
 Ouvrir `index.html` directement dans le navigateur.
@@ -139,25 +173,25 @@ Ouvrir `index.html` directement dans le navigateur.
 | Meilleurs Amis | Couplage fort | Inséparables |
 | Amor Non Partagé | Dépendance unidirectionnelle | Un dépend de l'autre |
 | Relation Toxique | Dépendance circulaire | Enchevêtrement compliqué |
-| Admirateur Secret | Communication asynchrone | Messages de groupe |
+| Admirateur Secrete | Communication asynchrone | Messages de groupe |
 | Suiveur de Fan | Dépendance foible | Le fan suit |
 | Relation Contractuelle | Dépendance d'interface | Contrat signé |
 
 ## Niveaux de Santé
 
-- **Excellent** 🟢: Risque de bugs faible, affichage sain
+- **Excellent** 🟢: Risque de bugs faible, visualisation saine
 - **Bon** 🔵: Bonne qualité de code
-- **Moyen** 🟡: Risque de bugs moyen, attention nécessaire
-- **Pauvre** 🟠: Haute complexité, refactoring recommandé
+- **Régulier** 🟡: Risque de bugs moyen, attention nécessaire
+- **Pauvre** 🟠: Haute complexité, restructuration recommandée
 - **Critique** 🔴: Risque de bugs élevé, correction urgente nécessaire
 
 ## Interactions
 
-- **Un Clic**: Voir le panneau d'attributs détaillé
-- **Double Clic**: Surligner toutes les relations connexes
+- **Un Clic**: Voir le panneau d'attributs détaillés
+- **Double Clic**: Resaltar toutes les relations connexes
 - **Glisser**: Ajuster la position du personnage pour démêler les réseaux complexes
 - **Défiler**: Zoom sur la vue
-- **Clic Droit Glissé**: Tourner la caméra
+- **Clic Droit**: Tourner la caméra
 
 ## Structure du Projet
 
@@ -165,7 +199,7 @@ Ouvrir `index.html` directement dans le navigateur.
 code-actor/
 ├── src/
 │   ├── analyzer/          # Moteur d'analyse de code
-│   │   ├── parser.ts      # Parseur multilangue
+│   │   ├── parser.ts      # Parseur multilingue
 │   │   ├── character-generator.ts  # Générateur de personnalité
 │   │   ├── relation-analyzer.ts    # Analyse des relations
 │   │   └── types.ts       # Définitions de types
@@ -189,11 +223,11 @@ code-actor/
 
 ## Mises à Jour Récentes
 
-- ✅ Rayon de tuyaux fixé à 0.8 pour visibilité maximale
+- ✅ Rayon de tuyauterie fixé à 0.8 pour visibilité maximale
 - ✅ Taille des yeux augmentée à 0.15 pour meilleure expressivité
-- ✅ Animation de particules de flux ajoutée montrant la direction
+- ✅ Ajoutée animation de particules de flux montrant la direction
 - ✅ Support pour les relations bidirectionnelles avec flèches duales
-- ✅ Skill Claude Code créé supportant la commande `/code-actor`
+- ✅ Créé Skill Claude Code supportant la commande `/code-actor`
 
 ## Licence
 
@@ -201,4 +235,4 @@ MIT
 
 ---
 
-Rendez la compréhension du code plus amusante! 🎭✨
+Rendez la compréhension du code plus amusant ! 🎭✨

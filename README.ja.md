@@ -40,7 +40,7 @@ CodeActorは**主要なAIエディタとIDE**すべて対応:
 |---------|----------|------------------|
 | **Claude Code** | ✅ ネイティブ | 内臓Skillサポート |
 | **Cursor** | ✅ 互換 | Claude Code Skillシステム使用 |
-| **OpenHands（旧Moltbot）** | ✅ 互換 | カスタムコマンド追加 |
+| **OpenClaw** | ✅ 互換 | Skillプラグインとしてインストール |
 | **GitHub Copilot** | ✅ 互換 | 拡張としてインストール |
 | **Continue.dev** | ✅ 互換 | CLI統合 |
 | **Windsurf** | ✅ 互換 | カスタムコマンド追加 |
@@ -66,24 +66,41 @@ cp -r . ~/.claude/skills/code-actor
 
 ### 他のAIエディタ用インストール
 
-#### OpenHands 🦾（旧Moltbot）
+#### OpenClaw 🤖
 
-**方法 1：カスタムサーバー追加**
+OpenClawはSkillプラグインをサポートするオープンソース個人AIアシスタントプラットフォームです。
 
-1. OpenHands設定を開く
-2. **Custom Servers**または**Model Settings**へ
-3. 新サーバー追加：
-   - 名前：`CodeActor`
-   - URL: `https://npx.code-actor.dev`
-   - またはローカル：`node /path/to/CodeActor/dist/cli/index.js serve .`
-
-**方法 2：直接npx統合**
+**インストール方法 1：GitHubリポジトリからインストール**
 
 ```bash
-# OpenHandsはnpxコマンド直接実行可能
-npx code-actor analyze ./path --format=json
-npx code-actor serve ./path
+# OpenClaw Skillプラグイン形式
+openclaw plugins install @ETZhang/code-actor
 ```
+
+**インストール方法 2：ClawHubからインストール**
+
+```bash
+# ClawHub（OpenClawのSkillレジストリ）から検索してインストール
+openclaw skill install code-actor
+```
+
+**インストールの確認：**
+
+```bash
+# インストール済みSkillを一覧表示
+openclaw skill list
+
+# Skillをテスト
+openclaw skill run code-actor --help
+```
+
+**開発者：ClawHubに公開**
+
+CodeActorをClawHubで利用可能にするには：
+1. このリポジトリをClawHubに公開
+2. ユーザは以下でインストール可能：`openclaw plugins install code-actor`
+
+---
 
 #### Cursorエディタ
 

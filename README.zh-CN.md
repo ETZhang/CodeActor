@@ -40,7 +40,7 @@ CodeActor 支持**所有主流 AI 编辑器和 IDE**：
 |---------|--------|----------|
 | **Claude Code** | ✅ 原生 | 内置技能支持 |
 | **Cursor** | ✅ 兼容 | 使用 Claude Code 技能系统 |
-| **OpenHands（原 Moltbot）** | ✅ 兼容 | 添加自定义命令 |
+| **OpenClaw** | ✅ 兼容 | 安装为技能插件 |
 | **GitHub Copilot** | ✅ 兼容 | 安装为扩展 |
 | **Continue.dev** | ✅ 兼容 | CLI 集成 |
 | **Windsurf** | ✅ 兼容 | 添加自定义命令 |
@@ -66,24 +66,41 @@ cp -r . ~/.claude/skills/code-actor
 
 ### 其他 AI 编辑器安装
 
-#### OpenHands 🦾（原 Moltbot）
+#### OpenClaw 🤖
 
-**方法 1：添加为自定义服务器**
+OpenClaw 是支持技能插件的开源个人 AI 助手平台。
 
-1. 打开 OpenHands 设置
-2. 进入 **Custom Servers** 或 **Model Settings**
-3. 添加新服务器：
-   - 名称：`CodeActor`
-   - URL: `https://npx.code-actor.dev`
-   - 或使用本地：`node /path/to/CodeActor/dist/cli/index.js serve .`
-
-**方法 2：直接 npx 集成**
+**安装方法 1：从 GitHub 仓库安装**
 
 ```bash
-# OpenHands 可以直接运行 npx 命令
-npx code-actor analyze ./path --format=json
-npx code-actor serve ./path
+# OpenClaw 技能插件格式
+openclaw plugins install @ETZhang/code-actor
 ```
+
+**安装方法 2：从 ClawHub 安装**
+
+```bash
+# 从 ClawHub（OpenClaw 的技能注册表）搜索并安装
+openclaw skill install code-actor
+```
+
+**验证安装：**
+
+```bash
+# 列出已安装的技能
+openclaw skill list
+
+# 测试技能
+openclaw skill run code-actor --help
+```
+
+**开发者：发布到 ClawHub**
+
+要让 CodeActor 在 ClawHub 上可用：
+1. 将此仓库发布到 ClawHub
+2. 用户可以使用：`openclaw plugins install code-actor` 安装
+
+---
 
 #### Cursor 编辑器
 
