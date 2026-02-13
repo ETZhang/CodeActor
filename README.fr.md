@@ -32,6 +32,22 @@ CodeActor est un outil créatif de visualisation de code qui analyse votre base 
 | 🌸 Âme Fragile | modules complexes | Corps mince, pansements, larmes |
 | 🌑 Vagabond Solitaire | sans appels | Semitransparent, aura qui s'estonne |
 
+## 🎯 Skill Universel pour Éditeurs IA
+
+CodeActor fonctionne avec **tous les principaux éditeurs et IDEs IA**:
+
+| Éditeur | Statut | Méthode d'Installasion |
+|---------|--------|---------------------|
+| **Claude Code** | ✅ Natif | Support de skill intégré |
+| **Cursor** | ✅ Compatible | Utilise le système de skills de Claude Code |
+| **GitHub Copilot** | ✅ Compatible | Installer comme extension |
+| **Continue.dev** | ✅ Compatible | Intégration CLI |
+| **Windsurf** | ✅ Compatible | Commande personnalisé |
+| **Tabnine** | ✅ Compatible | Plugin CLI |
+| **Codeium** | ✅ Compatible | API d'extensions |
+
+---
+
 ## Démarrage Rapide
 
 ### Comme Skill Claude Code (Recommandé)
@@ -47,22 +63,48 @@ cp -r . ~/.claude/skills/code-actor
 /code-actor
 ```
 
-### Indépendant
+### Installasion pour d'Autres Éditeurs IA
 
+#### Éditeur Cursor
 ```bash
-# Cloner le dépôt
-git clone https://github.com/ETZhang/CodeActor.git
-cd code-actor
-
-# Installer les dépendances
-npm install
-
-# Démarrer le serveur de développement
-npm run dev
-
-# Construire
+# Cursor utilise les skills Claude Code
+# Même installasion que Claude Code
+cd /path/to/CodeActor
 npm run build
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/code-actor
+# Disponible dans Cursor
 ```
+
+#### GitHub Copilot
+```bash
+# Installer via npm (bientôt)
+npm install -g code-actor
+
+# Ou utiliser directement
+npx code-actor analyze ./path/to/project
+```
+
+#### Continue.dev / Windsurf / Tabnine
+```bash
+# Utiliser comme outil CLI
+npx code-actor analyze ./path --format=json
+npx code-actor analyze ./path --format=mermaid
+npx code-actor serve ./path
+```
+
+#### Extension VS Code
+```bash
+# Installer depuis marketplace (bientôt)
+code --install-extension ETZhang.code-actor
+
+# Ou construire localement
+cd /path/to/CodeActor
+npm run build
+code --install-extension ./dist/vscode
+```
+
+### Indépendant
 
 ### Interface Web
 

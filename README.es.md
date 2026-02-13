@@ -32,6 +32,22 @@ CodeActor es una herramienta creativa de visualización de código que analiza t
 | 🌸 Alma Frágil | módulos complejos | Cuerpo delgado, curitas, lágrimas |
 | 🌑 Viajero Solitario | sin llamadas | Semitransparente, aura que se desvanece |
 
+## 🎯 Skill Universal para Editores AI
+
+CodeActor funciona en **todos los principales editores e IDEs con IA**:
+
+| Editor | Estado | Método de Instalación |
+|--------|--------|---------------------|
+| **Claude Code** | ✅ Natio | Soporta de skill integrado |
+| **Cursor** | ✅ Compatible | Usa sistema de skills de Claude Code |
+| **GitHub Copilot** | ✅ Compatible | Instalar como extensión |
+| **Continue.dev** | ✅ Compatible | Integración CLI |
+| **Windsurf** | ✅ Compatible | Comando personalizado |
+| **Tabnine** | ✅ Compatible | Plugin CLI |
+| **Codeium** | ✅ Compatible | API de extensines |
+
+---
+
 ## Inicio Rápido
 
 ### Como Skill de Claude Code (Recomendado)
@@ -47,22 +63,48 @@ cp -r . ~/.claude/skills/code-actor
 /code-actor
 ```
 
-### Independiente
+### Instalación para Otros Editores AI
 
+#### Editor Cursor
 ```bash
-# Clonar repositorio
-git clone https://github.com/ETZhang/CodeActor.git
-cd code-actor
-
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
-
-# Construir
+# Cursor usa skills de Claude Code
+# Misma instalación que Claude Code
+cd /path/to/CodeActor
 npm run build
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/code-actor
+# Disponible en Cursor
 ```
+
+#### GitHub Copilot
+```bash
+# Instalar via npm (próximamente)
+npm install -g code-actor
+
+# O usar directamente
+npx code-actor analyze ./path/to/project
+```
+
+#### Continue.dev / Windsurf / Tabnine
+```bash
+# Usar como herramienta CLI
+npx code-actor analyze ./path --format=json
+npx code-actor analyze ./path --format=mermaid
+npx code-actor serve ./path
+```
+
+#### Extensión VS Code
+```bash
+# Instalar desde marketplace (próximamente)
+code --install-extension ETZhang.code-actor
+
+# O construir localmente
+cd /path/to/CodeActor
+npm run build
+code --install-extension ./dist/vscode
+```
+
+### Independiente
 
 ### Interfaz Web
 

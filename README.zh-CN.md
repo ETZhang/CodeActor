@@ -32,6 +32,22 @@ CodeActor 是一个创意代码可视化工具，它会分析你的代码库，�
 | 🌸 脆弱灵魂 | 复杂模块 | 细长身体、创可贴、泪滴 |
 | 🌑 孤独行者 | 无人调用 | 半透明、渐隐光环 |
 
+## 🎯 通用 AI 编辑器技能
+
+CodeActor 支持**所有主流 AI 编辑器和 IDE**：
+
+| 编辑器 | 状态 | 安装方式 |
+|---------|--------|----------|
+| **Claude Code** | ✅ 原生 | 内置技能支持 |
+| **Cursor** | ✅ 兼容 | 使用 Claude Code 技能系统 |
+| **GitHub Copilot** | ✅ 兼容 | 安装为扩展 |
+| **Continue.dev** | ✅ 兼容 | CLI 集成 |
+| **Windsurf** | ✅ 兼容 | 添加自定义命令 |
+| **Tabnine** | ✅ 兼容 | CLI 插件 |
+| **Codeium** | ✅ 兼容 | 扩展 API |
+
+---
+
 ## 快速开始
 
 ### 作为 Claude Code Skill 使用（推荐）
@@ -45,6 +61,47 @@ cp -r . ~/.claude/skills/code-actor
 
 # 在任何项目中使用
 /code-actor
+```
+
+### 其他 AI 编辑器安装
+
+#### Cursor 编辑器
+```bash
+# Cursor 使用 Claude Code 技能
+# 与 Claude Code 安装方式相同
+cd /path/to/CodeActor
+npm run build
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/code-actor
+# 现在可在 Cursor 中使用
+```
+
+#### GitHub Copilot
+```bash
+# 通过 npm 安装（即将推出）
+npm install -g code-actor
+
+# 或直接使用
+npx code-actor analyze ./path/to/project
+```
+
+#### Continue.dev / Windsurf / Tabnine
+```bash
+# 作为 CLI 工具使用
+npx code-actor analyze ./path --format=json
+npx code-actor analyze ./path --format=mermaid
+npx code-actor serve ./path
+```
+
+#### VS Code 扩展
+```bash
+# 从市场安装（即将推出）
+code --install-extension ETZhang.code-actor
+
+# 或本地构建
+cd /path/to/CodeActor
+npm run build
+code --install-extension ./dist/vscode
 ```
 
 ### 独立使用

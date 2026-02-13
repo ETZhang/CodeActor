@@ -32,6 +32,22 @@ CodeActorは創造的なコード可視化化ツールです。コードベー�
 | 🌸 脆弱な魂 | 複雑なモジュール | 細長い体、絆創膏、涙滴 |
 | 🌑 孤独な旅人 | 呼び出しなし | 半透明、消え行く輪 |
 
+## 🎯 ユニバーサルAIエディタSkill
+
+CodeActorは**主要なAIエディタとIDE**すべて対応:
+
+| エディタ | スータス | インストール方法 |
+|---------|----------|------------------|
+| **Claude Code** | ✅ ネイティブ | 内臓Skillサポート |
+| **Cursor** | ✅ 互換 | Claude Code Skillシステム使用 |
+| **GitHub Copilot** | ✅ 互換 | 拡張としてインストール |
+| **Continue.dev** | ✅ 互換 | CLI統合 |
+| **Windsurf** | ✅ 互換 | カスタムコマンド追加 |
+| **Tabnine** | ✅ 互換 | CLIプラグイン |
+| **Codeium** | ✅ 互換 | 拡張API |
+
+---
+
 ## クイックスタート
 
 ### Claude Code Skillとして使用（推奨）
@@ -45,6 +61,47 @@ cp -r . ~/.claude/skills/code-actor
 
 # どのプロジェクトでも使用
 /code-actor
+```
+
+### 他のAIエディタ用インストール
+
+#### Cursorエディタ
+```bash
+# CursorはClaude Code Skill使用
+# Claude Codeと同にインストール
+cd /path/to/CodeActor
+npm run build
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/code-actor
+# Cursorで使用可能
+```
+
+#### GitHub Copilot
+```bash
+# npmでインストール（近日公開）
+npm install -g code-actor
+
+# または直接使用
+npx code-actor analyze ./path/to/project
+```
+
+#### Continue.dev / Windsurf / Tabnine
+```bash
+# CLIツールとして使用
+npx code-actor analyze ./path --format=json
+npx code-actor analyze ./path --format=mermaid
+npx code-actor serve ./path
+```
+
+#### VS Code拡張
+```bash
+# マーケットプレイスからインストール（近日公開）
+code --install-extension ETZhang.code-actor
+
+# またはローカルビルド
+cd /path/to/CodeActor
+npm run build
+code --install-extension ./dist/vscode
 ```
 
 ### スタンドアローン
